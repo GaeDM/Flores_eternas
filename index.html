@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flores eternas </title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Montserrat:wght@300;600&display=swap');
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: radial-gradient(circle, #6d0b0b 0%, #2e0202 100%);
+            font-family: 'Montserrat', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #canvas-flowers {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .container {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            padding: 20px;
+        }
+
+        h2 {
+            color: #ffd700;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+            transition: opacity 0.5s;
+        }
+
+        #btn-pulsame {
+            background: linear-gradient(45deg, #ff4d4d, #f9cb28);
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: white;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(255, 77, 77, 0.6);
+            transition: transform 0.3s, box-shadow 0.3s, opacity 0.5s;
+        }
+
+        #btn-pulsame:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 30px rgba(249, 203, 40, 0.8);
+        }
+
+        #mensaje-final {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            max-width: 600px;
+            color: black;
+            font-family: 'Dancing Script', cursive;
+            font-size: 2.2rem;
+            line-height: 1.4;
+            text-shadow: 2px 2px 15px rgba(0,0,0,0.8);
+            opacity: 0;
+            transition: opacity 2s ease-in-out;
+            z-index: 20;
+            pointer-events: none;
+            
+        }
+
+        .hidden {
+            opacity: 0 !important;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="canvas-flowers"></canvas>
+
+    <div class="container" id="ui-container">
+        <h2 id="instruccion">Púlsame y observa la magia</h2>
+        <button id="btn-pulsame">Púlsame</button>
+    </div>
+
+    <div id="mensaje-final">
+        "La belleza de una flor siempre se mostrará a aquellos que más disfruten de esta misma, por eso para ti siempre estarán las flores más bellas por la eternidad"
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas-flowers');
+        const ctx = canvas.getContext('2d');
+        const btn = document.getElementById('btn-pulsame');
+        const instruccion = document.getElementById('instruccion');
+        const mensaje = document.getElementById('mensaje-final');
+
+        let flowers = [];
+        let animationActive = false;
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        class Flower {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = 0;
+                this.maxSize = Math.random() * 30 + 20;
+                this.growthSpeed = Math.random() * 0.5 + 0.2;
+                this.type = Math.random() > 0.5 ? 'girasol' : 'gerbera';
+                this.color = this.type === 'girasol' ? '#FFD700' : this.getRandomGerberaColor();
+                this.rotation = Math.random() * Math.PI * 2;
+                this.petals = this.type === 'girasol' ? 12 : 18;
+            }
+
+            getRandomGerberaColor() {
+                const colors = ['#FF1493', '#FF4500', '#FF6347', '#E91E63'];
+                return colors[Math.floor(Math.random() * colors.length)];
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation);
+
+                // Dibujar pétalos
+                ctx.fillStyle = this.color;
+                for (let i = 0; i < this.petals; i++) {
+                    ctx.beginPath();
+                    ctx.ellipse(0, -this.size, this.size / 3, this.size, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.rotate((Math.PI * 2) / this.petals);
+                }
+
+                // Centro de la flor
+                ctx.beginPath();
+                ctx.fillStyle = this.type === 'girasol' ? '#3b2501' : '#fff';
+                ctx.arc(0, 0, this.size / 2.5, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.restore();
+            }
+
+            update() {
+                if (this.size < this.maxSize) {
+                    this.size += this.growthSpeed;
+                }
+            }
+        }
+
+        function animate() {
+            if (!animationActive) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Generar flores progresivamente hasta tener miles
+            if (flowers.length < 1500) {
+                for(let i = 0; i < 5; i++) {
+                    flowers.push(new Flower());
+                }
+            }
+
+            flowers.forEach(flower => {
+                flower.update();
+                flower.draw();
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        btn.addEventListener('click', () => {
+            btn.classList.add('hidden');
+            instruccion.classList.add('hidden');
+            animationActive = true;
+            animate();
+
+            // Mostrar el mensaje con retraso
+            setTimeout(() => {
+                mensaje.style.opacity = '1';
+            }, 2000);
+        });
+    </script>
+</body>
+</html>
